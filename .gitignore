@@ -1,0 +1,50 @@
+# Real configuration — never commit. Use config.example.json as the template.
+config.json
+config.json.*
+*.pre-tuning-bak
+*.pre-merge-bak
+
+# Real inventories and run outputs — these contain hostnames, IPs, and (depending on
+# source) credentials. Keep them out of the repo. Use inventory.example.csv as schema.
+*-Inventory.csv
+*-backup-failed-reasons-*.csv
+Outputs/
+Reports/
+NetSec-Backups/
+StateBackup_*/
+ConfigBackup_*/
+Global-backup-failed-reasons-*.csv
+Global-Failed-Backups-Reports/
+
+# Box JWT — application credentials.
+box_jwt.json
+*_jwt.json
+
+# Logs.
+*.log
+Logs/
+
+# Python build artifacts.
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+.pytest_cache/
+build/
+dist/
+
+# Editor / IDE / OS junk.
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+
+# Virtualenvs.
+venv/
+.venv/
+env/
+.env
+
+# Internal session-only docs (specs / plans created during the build).
+docs/superpowers/

@@ -1,0 +1,6 @@
+LocationName,Hostname,IP,Vendor,MachineType,DeviceClass,Region,DeviceType,LoginMethod,BackupCommand,CommandFile,Creds,Prompt,EnableCred
+Example Datacenter,EXAMPLE-CORE-SW01,192.0.2.10,Cisco,Catalyst 9300,Switch,REGION_A,cisco_ios,ssh,show running-config,Cisco-State-Backup-Commands.txt,svc-network-automation,,
+Example Branch Office,EXAMPLE-IDF-01,192.0.2.11,Cisco,Catalyst 2960,Switch,REGION_A,cisco_ios,ssh,show running-config,Cisco-State-Backup-Commands.txt,svc-network-automation,,
+Example Lab,EXAMPLE-LAB-CAT9200,192.0.2.12,Cisco,Catalyst C9200L,Switch,REGION_C,cisco_ios,ssh,show running-config,Cisco-State-Backup-Commands.txt,svc-network-automation,,
+Example Site B,EXAMPLE-SITE-B-SW01,192.0.2.13,HPE,ProCurve 2920,Switch,REGION_B,hp_procurve,ssh,show running-config,Hpe-State-Backup-Commands.txt,svc-network-admin,enable,<ENABLE_SECRET>
+Example Decommissioned,EXAMPLE-LEGACY-SW99,192.0.2.99,Cisco,Catalyst 2950,Switch,REGION_C,cisco_ios,telnet,show running-config,Cisco-State-Backup-Commands.txt,svc-network-automation,,
