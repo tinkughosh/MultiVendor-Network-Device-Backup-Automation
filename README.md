@@ -2,7 +2,7 @@
 
 # 🔌 MultiVendor Network Device Backup Automation
 
-### 💾 *Source-of-truth driven, vendor-agnostic, production-grade backups for 1,000+ network devices*
+### 💾 *Source-of-truth driven, vendor-agnostic, production-grade backups for 1,0000+ network devices*
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Linux](https://img.shields.io/badge/Linux-EC2%20%7C%20Amazon%20Linux%20%7C%20Ubuntu-FCC624?style=flat-square&logo=linux&logoColor=black)](https://aws.amazon.com/linux/)
