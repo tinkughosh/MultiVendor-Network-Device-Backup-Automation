@@ -21,7 +21,7 @@
 
 > 🎯 **One Python script. One config file. One source of truth (SolarWinds). All vendors. All regions. No CSV inventory to babysit.**
 
-A SolarWinds-driven, multi-vendor configuration and operational-state backup tool for ~1,000+ network devices across multiple regions, written in Python with [`netmiko`](https://github.com/ktbyers/netmiko).
+A SolarWinds-driven, multi-vendor configuration and operational-state backup tool for ~10,000+ network devices across multiple regions, written in Python with [`netmiko`](https://github.com/ktbyers/netmiko).
 
 ---
 
