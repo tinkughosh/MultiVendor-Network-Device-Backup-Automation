@@ -30,6 +30,7 @@ A SolarWinds-driven, multi-vendor configuration and operational-state backup too
 - [⚖️ Why this is different from a "traditional" backup script](#%EF%B8%8F-why-this-is-different-from-a-traditional-backup-script)
 - [📸 Sample output — what a run looks like](#-sample-output--what-a-run-looks-like)
 - [🏗️ Architecture](#%EF%B8%8F-architecture)
+- [🔄 Automation flow (end-to-end)](#-automation-flow-end-to-end)
 - [📁 Files in this repository](#-files-in-this-repository)
 - [🔗 SolarWinds custom properties (the contract)](#-solarwinds-custom-properties-the-contract)
 - [🚀 Quick start](#-quick-start)
@@ -205,6 +206,77 @@ Every device that did **not** finish with `success` lands here. Showing 8 repres
               | 📧 HTML email summary     |
               +---------------------------+
 ```
+
+---
+
+## 🔄 Automation flow (end-to-end)
+
+What `Global-Master-Backup.py` actually does, top to bottom — config validation, SolarWinds query, per-device filtering, parallel backup, aggregation, Box upload, email.
+
+```mermaid
+flowchart TD
+    Start([🚀 python3 Global-Master-Backup.py]) --> LoadCfg[📄 Load config.json<br/>validate required keys]
+    LoadCfg --> ValidateCfg{All required<br/>keys present?}
+    ValidateCfg -->|❌ missing| ExitMissing([🛑 Print missing keys<br/>SystemExit 1])
+    ValidateCfg -->|✅ all set| QuerySW[📡 SWQL query SolarWinds<br/>Orion.Nodes JOIN<br/>NodesCustomProperties<br/>WHERE Backup_Enabled = true]
+
+    QuerySW --> Filter[🔍 For each row, resolve:<br/>• Creds → password lookup<br/>• DeviceType + LoginMethod → driver<br/>• Prompt → enable-mode flag]
+
+    Filter -->|❌ Creds blank| SkipA[(📋 Skipped:<br/>Creds custom property empty)]
+    Filter -->|❌ Creds key unmapped| SkipB[(📋 Skipped:<br/>Creds key not in<br/>device_credentials)]
+    Filter -->|❌ DeviceType blank| SkipC[(📋 Skipped:<br/>DeviceType<br/>custom property empty)]
+    Filter -->|✅ all OK| Backupable[(✅ Backupable list:<br/>device dicts ready)]
+
+    Backupable --> Pool[🧵 ThreadPoolExecutor<br/>max_workers parallel]
+    Pool --> Worker
+
+    subgraph Worker [🔌 Per-device worker thread]
+        direction TB
+        Conn[netmiko ConnectHandler<br/>per-driver tuning:<br/>fast_cli, delay_factor,<br/>banner_timeout, read_timeout] --> Auth{Auth<br/>ok?}
+        Auth -->|❌ NetmikoAuthException| AuthErr[Result:<br/>authentication failure]
+        Auth -->|❌ NetmikoTimeoutException| TimeoutErr[Result:<br/>error: Connection timeout]
+        Auth -->|✅| EnMode{Prompt =<br/>'enable'?}
+        EnMode -->|✅ legacy gear| Esc[connection.enable]
+        EnMode -->|❌ no escalation| Cfg
+        Esc --> Cfg[💾 Run BackupCommand<br/>→ ConfigBackup_hostname_ip_ts.txt]
+        Cfg --> State[📊 Loop CommandFile lines<br/>per-command try/except<br/>→ StateBackup_hostname_ip_ts.txt]
+        State --> CmdErrs{Any per-command<br/>errors?}
+        CmdErrs -->|✅ N errors logged inline| OkPartial[Result: 'success<br/>N command errors']
+        CmdErrs -->|❌ none| OkClean[Result: success]
+        AuthErr --> DC[🔌 finally:<br/>connection.disconnect]
+        TimeoutErr --> DC
+        OkPartial --> DC
+        OkClean --> DC
+    end
+
+    DC --> Agg[📊 Aggregate results<br/>backup_failure + skipped = total failures]
+    SkipA --> Agg
+    SkipB --> Agg
+    SkipC --> Agg
+
+    Agg --> CSV[📋 Write failed-reasons CSV<br/>to paths.reports_dir]
+    CSV --> BoxAuth[🔐 Authenticate to Box<br/>via JWT app config]
+    BoxAuth --> BoxUp[📦 Upload to Box:<br/>• backups → dated subfolder<br/>• failed CSV → reports folder]
+    BoxUp --> Mail[📧 Build HTML summary table<br/>attach failed CSV<br/>SMTP send to recipients]
+    Mail --> End([✅ Done])
+
+    classDef startEnd fill:#C8E6C9,stroke:#2E7D32,stroke-width:2px,color:#1B5E20
+    classDef errExit fill:#FFCDD2,stroke:#C62828,stroke-width:2px,color:#B71C1C
+    classDef skipped fill:#FFE0B2,stroke:#E65100,color:#BF360C
+    classDef ok fill:#DCEDC8,stroke:#558B2F,color:#33691E
+    classDef io fill:#BBDEFB,stroke:#1565C0,color:#0D47A1
+
+    class Start,End startEnd
+    class ExitMissing,AuthErr,TimeoutErr errExit
+    class SkipA,SkipB,SkipC skipped
+    class Backupable,OkPartial,OkClean ok
+    class LoadCfg,QuerySW,CSV,Mail,BoxUp,BoxAuth io
+```
+
+> 🎯 **Three failure surfaces, each with a distinct fingerprint:**
+> - 🟧 **Skipped** (data problem) → fix in SolarWinds or `config.json`
+> - 🟥 **Error / auth fail** (network or device problem) → triage with the real exception class name in the CSV
+> - 🟩 **Success (N command errors)** (transient command issue) → device backed up; per-command errors logged inline in the state file
 
 ---
 
