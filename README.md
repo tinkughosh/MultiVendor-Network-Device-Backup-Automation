@@ -122,6 +122,7 @@ This automation rejects every one of those defaults. The tradeoffs are deliberat
 | 📘 [`PROJECT-NOTES.md`](PROJECT-NOTES.md) | Full design reference: architecture, custom-property table, deployment steps, design decisions, open items. |
 | 🔗 [`SolarWinds-Custom-Properties-Reference.md`](SolarWinds-Custom-Properties-Reference.md) | Hand-off doc for the SolarWinds team — the nine properties, their types, sample devices, validation checklist. |
 | 🐛 [`KNOWN-ISSUES.md`](KNOWN-ISSUES.md) | A running log of bugs we've hit, root causes, fixes, and prevention guidance. |
+| 📨 [`examples/`](examples/) | Sample artifacts a real run produces — failed-reasons CSV, email body HTML, with annotations explaining each `Result` value. |
 
 ---
 
@@ -269,8 +270,8 @@ NETMIKO_TUNING = {
 After a run, three artifacts land:
 
 1. 🖥️ **Per-device timing log on stdout** — `[OK ] hostname  ip  driver  N.Ns` or `[FAIL] ...`. Spot a vendor whose tuning is wrong on a single run.
-2. 📋 **Failed-reasons CSV** — every non-success device with the real exception class name in the `Result` column. Skipped devices appear here too with their skip reason.
-3. 📧 **HTML email summary** — total / success / failed (broken into "failed during backup" vs "skipped due to data") / success% / failure%. Subject line includes the run timestamp.
+2. 📋 **Failed-reasons CSV** — every non-success device with the real exception class name in the `Result` column. Skipped devices appear here too with their skip reason. &nbsp;➜&nbsp; see [`examples/example-failed-reasons.csv`](examples/example-failed-reasons.csv) for a sanitized sample, plus a [Result-value cheat sheet](examples/README.md#-example-failed-reasonscsv) explaining every error string.
+3. 📧 **HTML email summary** — total / success / failed (broken into "failed during backup" vs "skipped due to data") / success% / failure%. Subject line includes the run timestamp. &nbsp;➜&nbsp; see [`examples/example-email-body.html`](examples/example-email-body.html) (open in a browser to preview the rendered email).
 
 > 🎯 Percentages are calculated against the count SolarWinds returned, not against the count the script *attempted* — drops are visible.
 

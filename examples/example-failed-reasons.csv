@@ -1,0 +1,15 @@
+LocationName,Hostname,IP,Vendor,MachineType,AlertStatus,DeviceType,LoginMethod,Result
+"Example Datacenter, Region A",EXAMPLE-CORE-SW01,192.0.2.10,Cisco,Catalyst 9300 Series Switch,Up,cisco_ios_ssh,ssh,error: Connection timeout
+"Example Datacenter, Region A",EXAMPLE-DIST-SW02,192.0.2.11,Cisco,Catalyst 38xx stack,Up,cisco_ios_ssh,ssh,authentication failure
+"Example Branch Office, Region B",EXAMPLE-IDF1-SW01,198.51.100.21,Cisco,Catalyst 2960-48PST-L,Warning,cisco_ios_telnet,telnet,error: ssh_exception.SSHException: Error reading SSH protocol banner
+"Example Branch Office, Region B",EXAMPLE-IDF2-SW01,198.51.100.22,HPE,ProCurve 2920-24G-PoE+,Up,hp_procurve_ssh,ssh,error: exceptions.ReadTimeout: Pattern not detected: '#$' in output
+"Example Lab, Region C",EXAMPLE-LAB-WLC01,203.0.113.40,Cisco,4402 Wireless LAN Controller,Up,cisco_wlc_ssh,ssh,error: exceptions.ReadTimeout: Pattern not detected: '>$' in output
+"Example Site D, Region B",EXAMPLE-LEGACY-SW09,198.51.100.99,HPE,ProCurve Switch 2610-48-PWR,Warning,hp_procurve_telnet,telnet,error: Connection timeout
+"Example Site D, Region B",EXAMPLE-LEGACY-SW10,198.51.100.100,Cisco,Catalyst 2950,Up,cisco_ios_telnet,telnet,authentication failure
+"Example Datacenter, Region A",EXAMPLE-VOIP-GW01,192.0.2.50,Cisco,Voice Gateway VG202XM,Up,cisco_ios_ssh,ssh,error: TimeoutError: timed out
+"Example Branch Office, Region C",EXAMPLE-FW-EDGE01,203.0.113.1,Palo Alto,PA-820,Up,paloalto_panos_ssh,ssh,error: Connection timeout
+"Example Branch Office, Region C",EXAMPLE-CORE-SW03,203.0.113.10,Cisco,Catalyst 9300 Series Switch,Up,,,skipped: DeviceType custom property empty
+"Example Site E, Region A",EXAMPLE-DIST-SW04,192.0.2.20,Cisco,Catalyst 36xx stack,Warning,cisco_ios,ssh,"skipped: Creds custom property empty"
+"Example Site F, Region B",EXAMPLE-IDF3-SW02,198.51.100.30,Cisco,Catalyst 38xx stack,Up,cisco_ios,ssh,"skipped: Creds key ""admin_legacy_site_x"" not found in device_credentials (config.json)"
+"Example Site G, Region A",EXAMPLE-EDGE-SW01,192.0.2.30,Cisco,Catalyst 9500 Series Switch,Up,cisco_ios_ssh,ssh,error: socket.gaierror: [Errno -2] Name or service not known
+"Example Site G, Region A",EXAMPLE-EDGE-SW02,192.0.2.31,Juniper,EX4300-48T,Up,juniper_junos_ssh,ssh,error: NetmikoTimeoutException: Connection to device timed-out
