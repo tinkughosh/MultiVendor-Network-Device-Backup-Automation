@@ -8,9 +8,12 @@ config.json.*
 # source) credentials. Keep them out of the repo. Use inventory.example.csv as schema.
 *-Inventory.csv
 *-backup-failed-reasons-*.csv
-Outputs/
-Reports/
-NetSec-Backups/
+# Generic output dirs — names follow the convention documented in README.md
+# under "Filesystem layout & naming conventions". Whatever you set in
+# config.json -> paths.{backup_output_dir,reports_dir} should match here.
+outputs/
+reports/
+NetworkBackups/
 StateBackup_*/
 ConfigBackup_*/
 Global-backup-failed-reasons-*.csv

@@ -1,9 +1,9 @@
 {
     "paths": {
-        "command_file_path": "/home/ec2-user/Automation/Pull/Inputs",
-        "jwt_config_path": "/home/ec2-user/Automation/Pull/Inputs/box_jwt.json",
-        "backup_output_dir": "/home/ec2-user/Automation/Pull/Outputs/NetSec-Backups",
-        "reports_dir": "/home/ec2-user/Automation/Pull/Reports"
+        "command_file_path": "/opt/network-backup/inputs",
+        "jwt_config_path": "/opt/network-backup/inputs/box_jwt.json",
+        "backup_output_dir": "/opt/network-backup/outputs/NetworkBackups",
+        "reports_dir": "/opt/network-backup/reports"
     },
     "solarwinds": {
         "server": "solarwinds.example.com",

@@ -142,6 +142,73 @@ python3 Global-Master-Backup.py
 
 ---
 
+## Filesystem layout & naming conventions
+
+The reference deployment is a **Linux host** — typically an **AWS EC2** instance (Amazon Linux 2023 or Ubuntu). Nothing in the script is EC2-specific; any Linux box with outbound TCP to your devices, SolarWinds, Box, and SMTP works. Windows is not tested.
+
+### Recommended directory tree
+
+```
+<APP_INSTALL_ROOT>/                       # e.g. /opt/network-backup, /srv/network-backup, /home/<svc-user>/network-backup
+├── Global-Master-Backup.py               # the script
+├── check-solarwinds-device.py            # pre-flight diagnostic
+├── config.json                           # chmod 600 — never world-readable
+├── requirements.txt
+├── venv/                                 # python -m venv venv
+├── inputs/                               # paths.command_file_path
+│   ├── box_jwt.json                      # paths.jwt_config_path  (chmod 600)
+│   ├── Cisco-State-Backup-Commands.txt   # one show-command per line
+│   ├── Hpe-State-Backup-Commands.txt
+│   ├── WLC-State-Backup-Commands.txt
+│   └── Juniper-State-Backup-Commands.txt
+├── outputs/                              # paths.backup_output_dir's parent (or this itself)
+│   └── NetworkBackups/
+│       └── <DD-MM-YYYY>/                 # auto-created dated subfolder
+│           ├── StateBackup_<YYYY-MM-DD_HH-MM-SS>/
+│           │   ├── StateBackup_<hostname>_<ip>_<timestamp>.txt
+│           │   └── ...
+│           └── ConfigBackup_<YYYY-MM-DD_HH-MM-SS>/
+│               ├── ConfigBackup_<hostname>_<ip>_<timestamp>.txt
+│               └── ...
+└── reports/                              # paths.reports_dir
+    └── Global-backup-failed-reasons-<YYYY-MM-DD_HH-MM-SS>.csv
+```
+
+`<APP_INSTALL_ROOT>` is whatever you choose — the example `config.example.json` ships with `/opt/network-backup` as a placeholder. Pick a path your service account owns and that survives instance refreshes (an EBS volume mount, not the ephemeral root if you re-image often).
+
+### Output filename conventions
+
+The script controls these — they are not configurable, only documented for reference:
+
+| Artifact | Filename pattern | Where |
+|---|---|---|
+| State backup (per device) | `StateBackup_<hostname>_<ip>_<YYYY-MM-DD_HH-MM-SS>.txt` | `<backup_output_dir>/<DD-MM-YYYY>/StateBackup_<timestamp>/` |
+| Config backup (per device) | `ConfigBackup_<hostname>_<ip>_<YYYY-MM-DD_HH-MM-SS>.txt` | `<backup_output_dir>/<DD-MM-YYYY>/ConfigBackup_<timestamp>/` |
+| Failed-reasons report | `Global-backup-failed-reasons-<YYYY-MM-DD_HH-MM-SS>.csv` | `<reports_dir>/` |
+| Box: backups | `<DD-MM-YYYY>/StateBackup_<timestamp>/`, `<DD-MM-YYYY>/ConfigBackup_<timestamp>/` | under `box.folder_id` |
+| Box: failed reports | `Global-Failed-Backups-Reports/Global-backup-failed-reasons-*.csv` | under `box.failed_csv_folder_id` |
+
+`<hostname>` is whatever `connection.find_prompt()` returns after stripping `#`, `>`, and whitespace. `<timestamp>` is `strftime('%Y-%m-%d_%H-%M-%S')` captured once at the start of a run, so all files in a single run share the same timestamp.
+
+### Permissions & service account
+
+- Run the script under a dedicated, non-login service account (e.g. `svc-network-backup`).
+- `config.json` and `inputs/box_jwt.json` should be `chmod 600` and owned by that service account — they contain SolarWinds creds, device passwords, and Box JWT private key.
+- `outputs/` and `reports/` should be writable by the service account; world-readable is fine if the host is not multi-tenant, but `0750` (group: ops team) is safer.
+
+### Schedule
+
+`cron` on the Linux host is the typical scheduler. Example crontab entry:
+
+```cron
+# Nightly backup at 02:00 UTC
+0 2 * * * cd /opt/network-backup && /opt/network-backup/venv/bin/python /opt/network-backup/Global-Master-Backup.py >> /var/log/network-backup.log 2>&1
+```
+
+systemd timers work equally well if your distro/policy prefers them.
+
+---
+
 ## Per-driver tuning
 
 Each netmiko driver string keys into `NETMIKO_TUNING` in `Global-Master-Backup.py`. A driver not in the table falls back to a sensible default.

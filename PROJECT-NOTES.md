@@ -61,7 +61,7 @@ they won't have `Backup_Enabled` populated, so the SWQL filter drops them.
 
 ## config.json structure
 
-Deploy path: `/home/ec2-user/Automation/Pull/config.json`
+Deploy path (recommended): `<APP_INSTALL_ROOT>/config.json` — see the **Filesystem layout & naming conventions** section in `README.md` for the full recommended directory tree. The example values use `/opt/network-backup/` as a placeholder install root; substitute whatever path you adopt on your Linux host (typically an EC2 instance running Amazon Linux / Ubuntu).
 Permissions: `chmod 600`
 
 ```json
@@ -177,25 +177,26 @@ Canonical driver list: https://github.com/ktbyers/netmiko/blob/develop/PLATFORMS
    Set `Prompt = enable` and `EnableCred` only for devices that require
    enable mode (most REGION_B gear, older IOS devices).
 
-2. **EC2 host — set up venv:**
+2. **Linux host (EC2 or similar) — set up venv:**
    ```bash
-   cd /home/ec2-user/Automation/Pull
+   # Substitute <APP_INSTALL_ROOT> for your install path (e.g. /opt/network-backup)
+   cd <APP_INSTALL_ROOT>
    python3 -m venv venv
    source venv/bin/activate
    pip install -r requirements.txt
    ```
 
-3. **EC2 host — deploy and secure the config:**
+3. **Linux host — deploy and secure the config:**
    ```bash
-   cp config.json /home/ec2-user/Automation/Pull/config.json
-   chmod 600 /home/ec2-user/Automation/Pull/config.json
+   cp config.json <APP_INSTALL_ROOT>/config.json
+   chmod 600 <APP_INSTALL_ROOT>/config.json
    ```
    Fill in all placeholder values — SolarWinds server/credentials,
    `device_credentials`, email settings.
 
-4. **EC2 host — deploy the script:**
+4. **Linux host — deploy the script:**
    ```bash
-   cp Global-Master-Backup.py /home/ec2-user/Automation/Pull/
+   cp Global-Master-Backup.py <APP_INSTALL_ROOT>/
    ```
 
 5. **Ensure command files exist** at `COMMAND_FILE_PATH`
@@ -213,8 +214,7 @@ Canonical driver list: https://github.com/ktbyers/netmiko/blob/develop/PLATFORMS
    - `Loaded N devices with Backup_Enabled=YES. M skipped.`
    - Per-device skip reasons (missing Creds, unresolved credential key, empty DeviceType)
 
-8. **Update cron/scheduler** to call `Global-Master-Backup.py`.
-   Output directory changed from `REGION_A-Backups/` to `NetSec-Backups/`.
+8. **Update cron/scheduler** to call `Global-Master-Backup.py` from `<APP_INSTALL_ROOT>` on the schedule you want (typically once nightly).
 
 ---
 
