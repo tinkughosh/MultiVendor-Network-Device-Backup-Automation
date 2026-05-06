@@ -28,6 +28,7 @@ A SolarWinds-driven, multi-vendor configuration and operational-state backup too
 ## 📑 Table of contents
 
 - [⚖️ Why this is different from a "traditional" backup script](#%EF%B8%8F-why-this-is-different-from-a-traditional-backup-script)
+- [📸 Sample output — what a run looks like](#-sample-output--what-a-run-looks-like)
 - [🏗️ Architecture](#%EF%B8%8F-architecture)
 - [📁 Files in this repository](#-files-in-this-repository)
 - [🔗 SolarWinds custom properties (the contract)](#-solarwinds-custom-properties-the-contract)
@@ -64,6 +65,103 @@ This automation rejects every one of those defaults. The tradeoffs are deliberat
 | 1️⃣2️⃣ | **No connection cleanup on exception** — TCP `CLOSE_WAIT` accumulates over a long run, eventually exhausts FDs. | **`connection.disconnect()` in a `finally` block** for every device. |
 
 > 💡 The pattern across all twelve: **fail loudly when the data is wrong, fail with a triagable error when the network is wrong, and don't punish healthy devices for the existence of sick ones**.
+
+---
+
+## 📸 Sample output — what a run looks like
+
+Three artifacts come out of every run. Below is a sanitized preview of two of them so you can see the shape without cloning the repo.
+
+### 🖥️ Per-device stdout log (run progress)
+
+```text
+Fetching inventory from SolarWinds...
+Loaded 1008 devices with Backup_Enabled=true. 1005 backupable, 3 skipped (custom-property issues).
+  SKIP: EXAMPLE-CORE-SW03 (203.0.113.10) - skipped: DeviceType custom property empty
+  SKIP: EXAMPLE-DIST-SW04 (192.0.2.20)   - skipped: Creds custom property empty
+  SKIP: EXAMPLE-IDF3-SW02 (198.51.100.30) - skipped: Creds key "admin_legacy_site_x" not found in device_credentials (config.json)
+Backing up devices: 100%|████████████████████████| 1005/1005 [12:23<00:00,  1.35device/s]
+  [OK  ] EXAMPLE-CORE-SW01                    192.0.2.10       cisco_ios_ssh             4.8s
+  [OK  ] EXAMPLE-DIST-SW02                    192.0.2.11       cisco_ios_ssh             5.1s
+  [FAIL] EXAMPLE-IDF1-SW01                    198.51.100.21    cisco_ios_telnet          60.2s
+  [OK  ] EXAMPLE-IDF2-SW01                    198.51.100.22    hp_procurve_ssh           7.4s
+  [FAIL] EXAMPLE-LAB-WLC01                    203.0.113.40     cisco_wlc_ssh             182.7s
+  ...
+Email sent successfully!
+```
+
+### 📧 The HTML summary email
+
+> **Subject:** `Network Backup Summary at 02/05 on 02/05/2026`
+
+<table>
+<tr><td>
+
+Dear Team,
+
+Here is the summary of the device backup process. Percentages are calculated against the number of devices marked `Backup_Enabled = true` in SolarWinds.
+
+#### Backup Summary Report
+
+<table border="1" cellpadding="6" cellspacing="0">
+<tr>
+  <th>Backup-Enabled<br>in SolarWinds</th>
+  <th>Successful<br>Backups</th>
+  <th>Failed<br>(total)</th>
+  <th>Failed during<br>backup</th>
+  <th>Skipped<br>(custom-property issues)</th>
+  <th>Success %</th>
+  <th>Failure %</th>
+  <th>Total Time<br>(sec)</th>
+</tr>
+<tr align="center">
+  <td>1008</td>
+  <td>994</td>
+  <td>14</td>
+  <td>11</td>
+  <td>3</td>
+  <td>98.61%</td>
+  <td>1.39%</td>
+  <td>743.27</td>
+</tr>
+</table>
+
+**Failed during backup** = device was attempted but the connection, authentication, or command run failed.
+**Skipped** = device had `Backup_Enabled = true` in SolarWinds but a required custom property (`Creds`, `DeviceType`, or a credential key absent from `config.json`) prevented the script from attempting it.
+
+The attached CSV lists every non-successful device with its specific reason in the `Result` column.
+
+Best regards,
+Backup Automation System
+
+</td></tr>
+</table>
+
+> 📨 Raw HTML source: [`examples/example-email-body.html`](examples/example-email-body.html) — open in a browser to see the unstyled email exactly as recipients receive it.
+
+### 📋 The failed-reasons CSV (attached to the email and uploaded to Box)
+
+Every device that did **not** finish with `success` lands here. Showing 8 representative rows from the 14 in the [full sample file](examples/example-failed-reasons.csv):
+
+| LocationName | Hostname | IP | Vendor | DeviceType | LoginMethod | Result |
+|---|---|---|---|---|---|---|
+| Example Datacenter, Region A | EXAMPLE-CORE-SW01 | 192.0.2.10 | Cisco | cisco_ios_ssh | ssh | `error: Connection timeout` |
+| Example Datacenter, Region A | EXAMPLE-DIST-SW02 | 192.0.2.11 | Cisco | cisco_ios_ssh | ssh | `authentication failure` |
+| Example Branch Office, Region B | EXAMPLE-IDF1-SW01 | 198.51.100.21 | Cisco | cisco_ios_telnet | telnet | `error: ssh_exception.SSHException: Error reading SSH protocol banner` |
+| Example Branch Office, Region B | EXAMPLE-IDF2-SW01 | 198.51.100.22 | HPE | hp_procurve_ssh | ssh | `error: exceptions.ReadTimeout: Pattern not detected: '#$' in output` |
+| Example Site G, Region A | EXAMPLE-EDGE-SW01 | 192.0.2.30 | Cisco | cisco_ios_ssh | ssh | `error: socket.gaierror: [Errno -2] Name or service not known` |
+| Example Branch Office, Region C | EXAMPLE-CORE-SW03 | 203.0.113.10 | Cisco | *(blank)* | *(blank)* | `skipped: DeviceType custom property empty` |
+| Example Site E, Region A | EXAMPLE-DIST-SW04 | 192.0.2.20 | Cisco | cisco_ios | ssh | `skipped: Creds custom property empty` |
+| Example Site F, Region B | EXAMPLE-IDF3-SW02 | 198.51.100.30 | Cisco | cisco_ios | ssh | `skipped: Creds key "admin_legacy_site_x" not found in device_credentials (config.json)` |
+
+> 🔑 **Reading the `Result` column at a glance**
+> - `success` (any prefix) → device completed; not in this CSV
+> - `success (N command errors)` → connected and ran commands but N had per-command errors logged inline in the state-backup file
+> - `authentication failure` → TCP connected, credentials rejected
+> - `error: ...` → connection or command-run failure with the real exception class name (no more `Unknown error`)
+> - `skipped: ...` → device never attempted; SolarWinds custom-property data is missing or unmapped
+>
+> 📚 Full triage cheat sheet for every error / skip variant: [`examples/README.md`](examples/README.md#what-youll-see-in-result)
 
 ---
 
