@@ -2,7 +2,7 @@
 
 # 🔌 MultiVendor Network Device Backup Automation
 
-### 💾 *Source-of-truth driven, vendor-agnostic, production-grade backups for 1,0000+ network devices*
+### 💾 *Source-of-truth driven, vendor-agnostic, production-grade backups for 10,000+ network devices*
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-3776AB?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
 [![Linux](https://img.shields.io/badge/Linux-EC2%20%7C%20Amazon%20Linux%20%7C%20Ubuntu-FCC624?style=flat-square&logo=linux&logoColor=black)](https://aws.amazon.com/linux/)
@@ -449,7 +449,7 @@ After a run, three artifacts land:
 
 ## 📈 Status / scope
 
-- 🌍 **Production scale** — ~1,000+ devices across three regions
+- 🌍 **Production scale** — ~10,000+ devices across three regions
 - 🏭 **Vendors covered** — Cisco IOS / IOS-XE / NX-OS / WLC, HPE ProCurve, Juniper Junos, Aruba OS
 - ⏰ **Schedule** — nightly via cron on a single EC2 host
 - ☁️ **Storage** — Box (per-region or unified — your call via `config.json`)
